@@ -35,8 +35,10 @@ php bin/migrate.php
 
 ## Development server (front controller)
 
-HTTP entrypoint is not wired yet. Next step is to add a `public/index.php` and run:
+Run built-in PHP server:
 
 ```bash
 php -S 127.0.0.1:8080 -t public
+
+curl -sS http://127.0.0.1:8080/health
 ```
