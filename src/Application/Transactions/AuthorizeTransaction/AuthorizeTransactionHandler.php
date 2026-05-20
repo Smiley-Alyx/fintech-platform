@@ -24,9 +24,9 @@ final class AuthorizeTransactionHandler
     ) {
     }
 
-    public function handle(AuthorizeTransactionCommand $command): AuthorizeTransactionResult
+    public function handle(AuthorizeTransactionInput $input): AuthorizeTransactionResult
     {
-        $card = $this->cards->findById($command->cardId);
+        $card = $this->cards->findById($input->cardId);
         if ($card === null) {
             throw new TransactionException(TransactionErrorReason::CARD_NOT_FOUND, 404);
         }
@@ -37,7 +37,7 @@ final class AuthorizeTransactionHandler
 
         $this->uow->begin();
         try {
-            $accountList = $this->accounts->findActiveByCardId($command->cardId);
+            $accountList = $this->accounts->findActiveByCardId($input->cardId);
             if ($accountList === []) {
                 throw new TransactionException(TransactionErrorReason::NO_AVAILABLE_ACCOUNTS, 409);
             }
@@ -45,11 +45,11 @@ final class AuthorizeTransactionHandler
             $account = $accountList[0];
 
             $transaction = new Transaction();
-            $transaction->card_id = $command->cardId;
-            $transaction->external_transaction_id = $command->externalTransactionId;
+            $transaction->card_id = $input->cardId;
+            $transaction->external_transaction_id = $input->externalTransactionId;
             $transaction->bank_account_id = $account->id;
-            $transaction->vendor_id = $command->vendorId;
-            $transaction->amount = $command->amount;
+            $transaction->vendor_id = $input->vendorId;
+            $transaction->amount = $input->amount;
             $transaction->status = TransactionStatus::AUTHORIZED;
             $transaction->created_at = date('c');
 

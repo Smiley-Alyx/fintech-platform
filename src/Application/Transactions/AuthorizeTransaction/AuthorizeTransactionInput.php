@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Transactions\AuthorizeTransaction;
 
-final class AuthorizeTransactionCommand
+final class AuthorizeTransactionInput
 {
     public function __construct(
         public readonly int $cardId,
