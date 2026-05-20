@@ -1,0 +1,15 @@
+/vendor/
+/.idea/
+/.vscode/
+/.phpstorm.meta.php/
+/.cache/
+/.phpunit.result.cache
+
+/.env
+/.env.*
+
+/storage/
+/var/
+/tmp/
+
+*.log

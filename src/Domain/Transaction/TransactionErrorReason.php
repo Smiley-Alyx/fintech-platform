@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Transaction;
+
+enum TransactionErrorReason: string
+{
+    case CARD_NOT_FOUND = 'CARD_NOT_FOUND';
+    case CARD_INACTIVE = 'CARD_INACTIVE';
+    case NO_AVAILABLE_ACCOUNTS = 'NO_AVAILABLE_ACCOUNTS';
+    case INSUFFICIENT_BALANCE = 'INSUFFICIENT_BALANCE';
+    case ACCOUNT_INACTIVE = 'ACCOUNT_INACTIVE';
+    case AML_FAILED = 'AML_FAILED';
+    case KYC_FAILED = 'KYC_FAILED';
+    case KYT_FAILED = 'KYT_FAILED';
+    case LIMIT_EXCEEDED = 'LIMIT_EXCEEDED';
+    case COMPLIANCE_FAILED = 'COMPLIANCE_FAILED';
+    case INVALID_SIGNATURE = 'INVALID_SIGNATURE';
+}
