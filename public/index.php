@@ -8,7 +8,7 @@ $path = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 if ($method === 'GET' && $path === '/health') {
     http_response_code(200);
     header('Content-Type: application/json');
-    echo json_encode(['status' => 'ok'], JSON_THROW_ON_ERROR);
+    echo json_encode(['data' => ['status' => 'ok']], JSON_THROW_ON_ERROR);
     exit;
 }
 
@@ -16,7 +16,7 @@ $autoload = __DIR__ . '/../vendor/autoload.php';
 if (!is_file($autoload)) {
     http_response_code(503);
     header('Content-Type: application/json');
-    echo json_encode(['error' => 'service_unavailable'], JSON_THROW_ON_ERROR);
+    echo json_encode(['error' => ['code' => 'service_unavailable']], JSON_THROW_ON_ERROR);
     exit;
 }
 

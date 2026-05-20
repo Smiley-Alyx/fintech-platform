@@ -24,14 +24,14 @@ final class Kernel
     public function handle(string $method, string $path, string $rawBody, array $headers = []): Response
     {
         if ($method === 'GET' && $path === '/health') {
-            return new Response(200, ['status' => 'ok']);
+            return Response::ok(['status' => 'ok']);
         }
 
         if ($method === 'POST' && $path === '/transactions/authorize') {
             return $this->authorizeTransaction($rawBody, $headers);
         }
 
-        return new Response(404, ['error' => 'not_found']);
+        return Response::error('not_found', 404);
     }
 
     /**
@@ -42,30 +42,30 @@ final class Kernel
         try {
             $signingSecret = getenv('SIGNING_SECRET');
             if (!is_string($signingSecret) || $signingSecret === '') {
-                return new Response(503, ['error' => 'service_unavailable']);
+                return Response::error('service_unavailable', 503);
             }
 
             $signature = $this->getHeader($headers, 'X-Signature');
             try {
                 (new HmacSignatureValidator($signingSecret))->validate($rawBody, $signature);
             } catch (\RuntimeException) {
-                return new Response(401, ['error' => 'invalid_signature']);
+                return Response::error('invalid_signature', 401);
             }
 
             $data = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
             if (!is_array($data)) {
-                return new Response(400, ['error' => 'invalid_json']);
+                return Response::error('invalid_json', 400);
             }
 
             foreach (['card_id', 'external_transaction_id', 'amount', 'vendor_id'] as $key) {
                 if (!array_key_exists($key, $data)) {
-                    return new Response(422, ['error' => 'validation_failed', 'field' => $key]);
+                    return Response::error('validation_failed', 422, ['field' => $key]);
                 }
             }
 
             $databaseUrl = getenv('DATABASE_URL');
             if (!is_string($databaseUrl) || $databaseUrl === '') {
-                return new Response(503, ['error' => 'service_unavailable']);
+                return Response::error('service_unavailable', 503);
             }
 
             $cfg = DatabaseUrl::parse($databaseUrl);
@@ -88,13 +88,13 @@ final class Kernel
 
             $resource = $controller->authorize($request);
 
-            return new Response(200, $resource->toArray());
+            return Response::ok($resource->toArray());
         } catch (TransactionException $e) {
-            return new Response($e->statusCode, ['error' => $e->reason->value]);
+            return Response::error(strtolower($e->reason->value), $e->statusCode);
         } catch (\JsonException) {
-            return new Response(400, ['error' => 'invalid_json']);
+            return Response::error('invalid_json', 400);
         } catch (\Throwable) {
-            return new Response(500, ['error' => 'internal_error']);
+            return Response::error('internal_error', 500);
         }
     }
 

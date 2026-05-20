@@ -15,4 +15,25 @@ final class Response
         public readonly array $headers = ['Content-Type' => 'application/json'],
     ) {
     }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function ok(array $data, int $statusCode = 200): self
+    {
+        return new self($statusCode, ['data' => $data]);
+    }
+
+    /**
+     * @param array<string, mixed> $details
+     */
+    public static function error(string $code, int $statusCode, array $details = []): self
+    {
+        $payload = ['error' => ['code' => $code]];
+        if ($details !== []) {
+            $payload['error']['details'] = $details;
+        }
+
+        return new self($statusCode, $payload);
+    }
 }
