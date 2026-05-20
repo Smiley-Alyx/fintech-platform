@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Http;
 
+use App\HmacSignatureValidator;
 use App\Application\Transactions\AuthorizeTransaction\AuthorizeTransactionHandler;
 use App\Domain\Transaction\TransactionException;
 use App\Http\AuthorizeTransactionRequest;
@@ -17,22 +18,40 @@ use App\Infrastructure\Persistence\Postgres\PdoUnitOfWork;
 
 final class Kernel
 {
-    public function handle(string $method, string $path, string $rawBody): Response
+    /**
+     * @param array<string, string> $headers
+     */
+    public function handle(string $method, string $path, string $rawBody, array $headers = []): Response
     {
         if ($method === 'GET' && $path === '/health') {
             return new Response(200, ['status' => 'ok']);
         }
 
         if ($method === 'POST' && $path === '/transactions/authorize') {
-            return $this->authorizeTransaction($rawBody);
+            return $this->authorizeTransaction($rawBody, $headers);
         }
 
         return new Response(404, ['error' => 'not_found']);
     }
 
-    private function authorizeTransaction(string $rawBody): Response
+    /**
+     * @param array<string, string> $headers
+     */
+    private function authorizeTransaction(string $rawBody, array $headers): Response
     {
         try {
+            $signingSecret = getenv('SIGNING_SECRET');
+            if (!is_string($signingSecret) || $signingSecret === '') {
+                return new Response(503, ['error' => 'service_unavailable']);
+            }
+
+            $signature = $this->getHeader($headers, 'X-Signature');
+            try {
+                (new HmacSignatureValidator($signingSecret))->validate($rawBody, $signature);
+            } catch (\RuntimeException) {
+                return new Response(401, ['error' => 'invalid_signature']);
+            }
+
             $data = json_decode($rawBody, true, 512, JSON_THROW_ON_ERROR);
             if (!is_array($data)) {
                 return new Response(400, ['error' => 'invalid_json']);
@@ -77,5 +96,20 @@ final class Kernel
         } catch (\Throwable) {
             return new Response(500, ['error' => 'internal_error']);
         }
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    private function getHeader(array $headers, string $name): string
+    {
+        $needle = strtolower($name);
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === $needle) {
+                return $value;
+            }
+        }
+
+        return '';
     }
 }

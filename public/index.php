@@ -26,8 +26,20 @@ if ($rawBody === false) {
     $rawBody = '';
 }
 
+$headers = [];
+foreach ($_SERVER as $key => $value) {
+    if (!is_string($value)) {
+        continue;
+    }
+
+    if (str_starts_with($key, 'HTTP_')) {
+        $name = str_replace('_', '-', substr($key, 5));
+        $headers[$name] = $value;
+    }
+}
+
 $kernel = new App\Infrastructure\Http\Kernel();
-$response = $kernel->handle($method, $path, $rawBody);
+$response = $kernel->handle($method, $path, $rawBody, $headers);
 
 foreach ($response->headers as $name => $value) {
     header($name . ': ' . $value);

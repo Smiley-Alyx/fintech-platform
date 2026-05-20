@@ -43,9 +43,11 @@ php -S 127.0.0.1:8080 -t public
 curl -sS http://127.0.0.1:8080/health
 
 export DATABASE_URL='postgresql://user:pass@localhost:5432/fintech?sslmode=disable'
+export SIGNING_SECRET='change-me'
 php bin/migrate.php
 
 curl -sS -X POST http://127.0.0.1:8080/transactions/authorize \
   -H 'Content-Type: application/json' \
+  -H "X-Signature: $(echo -n '{\"card_id\":1,\"external_transaction_id\":\"tx_1\",\"amount\":\"10.00\",\"vendor_id\":\"vendor_1\"}' | openssl dgst -sha256 -hmac 'change-me' -r | cut -d' ' -f1)" \
   -d '{"card_id":1,"external_transaction_id":"tx_1","amount":"10.00","vendor_id":"vendor_1"}'
 ```
