@@ -2,11 +2,6 @@
 
 declare(strict_types=1);
 
-$autoload = __DIR__ . '/../vendor/autoload.php';
-if (is_file($autoload)) {
-    require $autoload;
-}
-
 $sendJson = static function (int $statusCode, array $payload): void {
     http_response_code($statusCode);
     echo json_encode($payload, JSON_THROW_ON_ERROR);
@@ -24,6 +19,13 @@ if ($method === 'GET' && $path === '/health') {
 
 if ($method === 'POST' && $path === '/transactions/authorize') {
     try {
+        $autoload = __DIR__ . '/../vendor/autoload.php';
+        if (!is_file($autoload)) {
+            $sendJson(503, ['error' => 'service_unavailable']);
+            exit;
+        }
+        require $autoload;
+
         $rawBody = file_get_contents('php://input');
         if ($rawBody === false) {
             $sendJson(400, ['error' => 'invalid_body']);
@@ -45,7 +47,7 @@ if ($method === 'POST' && $path === '/transactions/authorize') {
 
         $databaseUrl = getenv('DATABASE_URL');
         if (!is_string($databaseUrl) || $databaseUrl === '') {
-            $sendJson(500, ['error' => 'server_misconfigured']);
+            $sendJson(503, ['error' => 'service_unavailable']);
             exit;
         }
 
